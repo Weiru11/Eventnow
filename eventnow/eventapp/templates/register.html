@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Register — EventNow{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="{% url 'index' %}" class="sidebar-brand">Event<span class="dot">Now</span></a>
+
+        <div class="sidebar-section-label">Main</div>
+        <a href="{% url 'dashboard' %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+        </a>
+        <a href="{% url 'event_create' %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Create Event
+        </a>
+
+        <div class="sidebar-section-label">This Event</div>
+        <a href="{% url 'schedule' event.id %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            Sessions
+        </a>
+        <a href="{% url 'tracking' event.id %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            Tracking
+        </a>
+        <a href="{% url 'register' event.id %}" class="sidebar-link active">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Register
+        </a>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-bottom">
+            {% if user.is_authenticated %}
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="sidebar-logout">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                    Logout
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'index' %}" class="sidebar-link">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 12L12 3l9 9M5 10v10h5v-6h4v6h5V10"/></svg>
+                Home
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1>Register for Event</h1>
+                <p>{{ event.title }} &nbsp;·&nbsp; {{ event.start_datetime|date:"j M Y" }}</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <a href="{% url 'schedule' event.id %}" class="btn-ghost">View Schedule</a>
+                <a href="{% url 'tracking' event.id %}" class="btn-ghost">View Tracking</a>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div style="max-width:680px;">
+
+                <!-- EVENT SUMMARY BANNER -->
+                <div style="background:var(--primary-light); border:1px solid #bfdbfe;
+                            border-radius:12px; padding:18px 22px; margin-bottom:24px;
+                            display:flex; gap:16px; align-items:center;">
+                    <div style="font-size:1.8rem;">📅</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:700; font-size:0.95rem;">{{ event.title }}</div>
+                        <div style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">
+                            {{ event.start_datetime|date:"j M Y, g:i A" }}
+                            &nbsp;·&nbsp;
+                            {{ event.location|default:"Location TBC" }}
+                        </div>
+                        <div style="margin-top:6px;">
+                            {% if spots_remaining is not None %}
+                                {% if spots_remaining <= 0 %}
+                                    <span style="font-size:0.78rem; color:#ef4444; font-weight:600;">
+                                        ❌ This event is full
+                                    </span>
+                                {% elif spots_remaining <= 10 %}
+                                    <span style="font-size:0.78rem; color:#f59e0b; font-weight:600;">
+                                        ⚠️ Only {{ spots_remaining }} spot{{ spots_remaining|pluralize }} left!
+                                    </span>
+                                {% else %}
+                                    <span style="font-size:0.78rem; color:#10b981; font-weight:600;">
+                                        ✅ {{ spots_remaining }} spot{{ spots_remaining|pluralize }} remaining
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span style="font-size:0.78rem; color:#10b981; font-weight:600;">
+                                    ✅ Open registration
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="text-align:right; font-size:0.82rem; color:var(--text-muted);">
+                        {{ registered_count }} registered
+                    </div>
+                </div>
+
+                <!-- 這才是真正的 FORM 開始 -->
+                <form method="POST" action="{% url 'register' event.id %}">
+                    {% csrf_token %}
+
+                    <!-- PERSONAL DETAILS -->
+                    <div class="form-section">
+                        <h5>👤 Your Details</h5>
+
+                        <div style="margin-bottom:16px;">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" name="full_name" class="form-input"
+                                placeholder="e.g. Sarah Lin" required>
+                        </div>
+
+                        <div style="margin-bottom:16px;">
+                            <label class="form-label">Email Address *</label>
+                            <input type="email" name="email" class="form-input"
+                                placeholder="your@email.com" required>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                            <div>
+                                <label class="form-label">Organisation</label>
+                                <input type="text" name="organisation" class="form-input"
+                                    placeholder="Your company (optional)">
+                            </div>
+                            <div>
+                                <label class="form-label">Job Title</label>
+                                <input type="text" name="job_title" class="form-input"
+                                    placeholder="e.g. Software Engineer (optional)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SESSION SELECTION -->
+                    <div class="form-section">
+                        <h5>🗓️ Select Sessions to Attend</h5>
+                        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:18px;">
+                            Choose the sessions you'd like to join.
+                        </p>
+
+                        {% for session in sessions %}
+                        <label style="cursor:pointer; display:block;">
+                            <div class="register-session">
+                                <input type="checkbox" name="session_{{ session.id }}"
+                                    style="margin-top:3px; accent-color:#2563eb;"
+                                    onchange="this.closest('.register-session').classList.toggle('selected', this.checked)">
+                                <div style="flex:1;">
+                                    <div style="font-weight:600; font-size:0.9rem;">{{ session.title }}</div>
+                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:3px;">
+                                        {{ session.start_time|date:"g:i A" }}
+                                        {% if session.speaker %}&nbsp;·&nbsp; {{ session.speaker }}{% endif %}
+                                        {% if session.max_capacity %}
+                                            &nbsp;·&nbsp;
+                                            <span style="color:#f59e0b; font-weight:600;">
+                                                {{ session.max_capacity }} spots
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <span class="track-pill"
+                                    style="background:#dbeafe; color:#1e40af; white-space:nowrap;">
+                                    {{ session.track.name }}
+                                </span>
+                            </div>
+                        </label>
+                        {% empty %}
+                        <div style="text-align:center; padding:24px; color:var(--text-muted);">
+                            No sessions available yet.
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- SUBMIT -->
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <a href="{% url 'dashboard' %}" class="btn-ghost">← Back to Dashboard</a>
+                        <button type="submit" class="btn-primary-custom"
+                            style="padding:12px 28px; font-size:0.95rem;">
+                            Complete Registration →
+                        </button>
+                    </div>
+
+                </form>
+
+                <div style="text-align:center; margin-top:20px; font-size:0.78rem; color:var(--text-muted);">
+                    🔒 Your details are kept private and will only be used for this event.
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — EventNow{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="{% url 'index' %}" class="sidebar-brand">
+            Event<span class="dot">Now</span>
+        </a>
+
+        <div class="sidebar-section-label">Main</div>
+
+        <a href="{% url 'dashboard' %}" class="sidebar-link active">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+        </a>
+
+        <a href="{% url 'event_create' %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Create Event
+        </a>
+
+        <div class="sidebar-section-label">Event Actions</div>
+
+        <span class="sidebar-link" style="opacity:0.4; cursor:default; font-size:0.82rem;">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+            Select an event to continue
+        </span>
+
+        <div class="sidebar-section-label">Admin</div>
+        <a href="{% url 'manage_subscribers' %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            Subscribers
+        </a>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-bottom">
+            {% if user.is_authenticated %}
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="sidebar-logout">
+                    Logout
+                </button>
+            </form>
+            {% endif %}
+
+            <a href="{% url 'index' %}" class="sidebar-link">
+                Home
+            </a>
+        </div>
+    </aside>
+
+
+
+    <!-- MAIN -->
+    <div class="main-content">
+
+        <!-- HEADER -->
+        <div class="page-header">
+            <div>
+                <h1>Dashboard</h1>
+                <p>Welcome back — here's what's happening with your events.</p>
+            </div>
+            <a href="{% url 'event_create' %}" class="btn-primary-custom">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                New Event
+            </a>
+        </div>
+
+        <div class="page-body">
+
+            <!-- STATS -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="label">Total Events</div>
+                        <div class="value">{{ events.count }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="label">Total Registrations</div>
+                        <div class="value">{{ total_registrations }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="label">Total Sessions</div>
+                        <div class="value">{{ total_sessions }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EVENTS LIST -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h2 style="font-size:1.1rem; font-weight:700;">My Events</h2>
+            </div>
+            {% for event in events %}
+            <div class="event-card mb-3" style="cursor:default;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                            <h3 style="font-size:1rem; font-weight:700; margin:0;">{{ event.title }}</h3>
+                            {% if event.status == 'published' %}
+                                <span class="badge-live">● Live</span>
+                            {% elif event.status == 'draft' %}
+                                <span class="badge-draft">Draft</span>
+                            {% endif %}
+                        </div>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">
+                            📍 {{ event.location|default:"No location" }}
+                            &nbsp;·&nbsp;
+                            {{ event.start_datetime|date:"j M Y" }}
+                        </p>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <a href="{% url 'schedule' event.id %}"
+                        class="btn-ghost" style="font-size:0.82rem; padding:7px 14px;">Sessions</a>
+                        <a href="{% url 'tracking' event.id %}"
+                        class="btn-ghost" style="font-size:0.82rem; padding:7px 14px;">Tracking</a>
+                        <a href="{% url 'event_edit' event.id %}"
+                        class="btn-ghost" style="font-size:0.82rem; padding:7px 14px;">Edit</a>
+
+                        <a href="{% url 'ai_chat_ui' event.id %}"
+                        style="background:#f0fdf4; border:1px solid #86efac; color:#15803d;
+                                padding:7px 14px; border-radius:8px; font-size:0.82rem;
+                                font-weight:600; text-decoration:none; display:inline-flex;
+                                align-items:center; gap:4px;">
+                            ✨ AI
+                        </a>
+
+                        <a href="{% url 'register' event.id %}"
+                        class="btn-primary-custom" style="font-size:0.82rem; padding:7px 14px;">Register</a>
+                        
+                        <!-- Delete button -->
+                        <form method="POST" action="{% url 'event_delete' event.id %}"
+                            onsubmit="return confirm('Delete this event?');">
+                            {% csrf_token %}
+                            <button type="submit"
+                                style="background:#fef2f2; border:1px solid #fecaca; color:#dc2626;
+                                    padding:7px 14px; border-radius:8px; font-size:0.82rem; cursor:pointer;">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="border:2px dashed var(--border); border-radius:14px; padding:40px; text-align:center;">
+                <div style="font-size:1.5rem; margin-bottom:8px;">📅</div>
+                <div style="font-weight:600; margin-bottom:4px;">No events yet</div>
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+                    Create your first event to get started.
+                </div>
+                <a href="{% url 'event_create' %}" class="btn-primary-custom">Create Event</a>
+            </div>
+            {% endfor %}
+
+
+ 
+        <a href="{% url 'event_create' %}" class="btn-primary-custom" style="font-size:0.85rem;">Create Event</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

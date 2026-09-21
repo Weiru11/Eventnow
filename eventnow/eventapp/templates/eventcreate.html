@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}Create Event — EventNow{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="{% url 'index' %}" class="sidebar-brand">
+            Event<span class="dot">Now</span>
+        </a>
+
+        <div class="sidebar-section-label">Main</div>
+
+        <a href="{% url 'dashboard' %}" class="sidebar-link">
+            Dashboard
+        </a>
+
+        <a href="{% url 'event_create' %}" class="sidebar-link active">
+            Create Event
+        </a>
+
+        <!-- ⭐ Admin 正確位置 ⭐ -->
+        <div class="sidebar-section-label">Admin</div>
+
+        <a href="{% url 'manage_subscribers' %}" class="sidebar-link">
+            Subscribers
+        </a>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-bottom">
+            {% if user.is_authenticated %}
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="sidebar-logout">
+                    Logout
+                </button>
+            </form>
+            {% endif %}
+
+            <a href="{% url 'index' %}" class="sidebar-link">
+                Home
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1>Create New Event</h1>
+                <p>Fill in the details to set up your event page.</p>
+            </div>
+
+            <a href="{% url 'dashboard' %}" class="btn-ghost">
+                ← Back to Dashboard
+            </a>
+        </div>
+
+        <div class="page-body">
+
+            <form method="POST" style="max-width: 720px;">
+                {% csrf_token %}
+
+                <!-- EVENT DETAILS -->
+                <div class="form-section">
+                    <h5>📋 Event Details</h5>
+
+                    <div style="margin-bottom:18px;">
+                        <label class="form-label">Event Name *</label>
+                        <input type="text" name="title" class="form-input"
+                            placeholder="e.g. Brisbane Tech Conference 2026"
+                            value="{{ event.title|default:'' }}" required>
+                    </div>
+
+                    <div style="margin-bottom:18px;">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-input" rows="3"
+                            placeholder="Tell attendees what your event is about...">{{ event.description|default:'' }}</textarea>
+                    </div>
+                    <label class="form-label">Description</label>
+
+                    <!-- AI Generate Button — HTMX -->
+                    <div style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+                        <button type="button"
+                            hx-post="{% url 'ai_describe' %}"
+                            hx-include="[name='title'],[name='location'],[name='event_type']"
+                            hx-target="#ai-description-result"
+                            hx-swap="innerHTML"
+                            hx-indicator="#ai-desc-loading"
+                            style="background:#f0fdf4; border:1px solid #86efac; color:#15803d;
+                                padding:7px 14px; border-radius:8px; font-size:0.82rem;
+                                font-weight:600; cursor:pointer;">
+                            ✨ Generate Description with AI
+                        </button>
+                        <span id="ai-desc-loading" class="htmx-indicator"
+                            style="font-size:0.8rem; color:var(--text-muted);">
+                            Generating...
+                        </span>
+                    </div>
+                    <div id="ai-description-result"></div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px;">
+                        <div>
+                            <label class="form-label">Start Date & Time *</label>
+                            <input type="datetime-local" name="start_datetime" class="form-input"
+                                value="{{ event.start_datetime|date:'Y-m-d\\TH:i'|default:'' }}" required>
+                        </div>
+
+                        <div>
+                            <label class="form-label">End Date & Time *</label>
+                            <input type="datetime-local" name="end_datetime" class="form-input"
+                                value="{{ event.end_datetime|date:'Y-m-d\\TH:i'|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div>
+                            <label class="form-label">Location</label>
+                            <input type="text" name="location" class="form-input"
+                                placeholder="e.g. Brisbane Convention Centre"
+                                value="{{ event.location|default:'' }}">
+                        </div>
+
+                        <div>
+                            <label class="form-label">Event Type *</label>
+                            <select name="event_type" class="form-input">
+                                <option value="conference" {% if event.event_type == 'conference' %}selected{% endif %}>Conference</option>
+                                <option value="meetup" {% if event.event_type == 'meetup' %}selected{% endif %}>Meetup</option>
+                                <option value="workshop" {% if event.event_type == 'workshop' %}selected{% endif %}>Workshop</option>
+                                <option value="webinar" {% if event.event_type == 'webinar' %}selected{% endif %}>Webinar</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REGISTRATION SETTINGS -->
+                <div class="form-section">
+                    <h5>⚙️ Registration Settings</h5>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px;">
+                        <div>
+                            <label class="form-label">Max Capacity</label>
+                            <input type="number" name="max_capacity" class="form-input"
+                                placeholder="e.g. 200"
+                                value="{{ event.max_capacity|default:'' }}">
+                        </div>
+
+                        <div>
+                            <label class="form-label">Visibility</label>
+                            <select name="visibility" class="form-input">
+                                <option value="public" {% if event.visibility == 'public' or not event %}selected{% endif %}>
+                                    Public — anyone can register
+                                </option>
+                                <option value="private" {% if event.visibility == 'private' %}selected{% endif %}>
+                                    Private — invite only
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-input">
+                            <option value="draft" {% if event.status == 'draft' or not event %}selected{% endif %}>Draft</option>
+                            <option value="published" {% if event.status == 'published' %}selected{% endif %}>Published</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ACTIONS -->
+                <div style="display:flex; justify-content:flex-end; gap:12px;">
+                    <a href="{% url 'dashboard' %}" class="btn-ghost">Cancel</a>
+
+                    {% if event %}
+                        <button type="submit" class="btn-primary-custom">
+                            Save Changes →
+                        </button>
+                    {% else %}
+                        <button type="submit" name="action" value="draft" class="btn-ghost">
+                            Save as Draft
+                        </button>
+
+                        <button type="submit" name="action" value="publish" class="btn-primary-custom">
+                            Create Event →
+                        </button>
+                    {% endif %}
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

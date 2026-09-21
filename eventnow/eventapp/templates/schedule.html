@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% block title %}Session Schedule — EventNow{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" role="navigation" aria-label="Main navigation">
+        <a href="{% url 'index' %}" class="sidebar-brand">
+            Event<span class="dot">Now</span>
+        </a>
+
+        <div class="sidebar-section-label">Main</div>
+        <a href="{% url 'dashboard' %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+        </a>
+        <a href="{% url 'event_create' %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Create Event
+        </a>
+
+        <div class="sidebar-section-label">This Event</div>
+        <a href="{% url 'schedule' event.id %}" class="sidebar-link active">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            Sessions
+        </a>
+        <a href="{% url 'tracking' event.id %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Tracking
+        </a>
+        <a href="{% url 'register' event.id %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Register
+        </a>
+        <a href="{% url 'ai_chat_ui' event.id %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            AI Assistant
+        </a>
+
+        <div class="sidebar-section-label">Admin</div>
+        <a href="{% url 'manage_subscribers' %}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            Subscribers
+        </a>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-bottom">
+            {% if user.is_authenticated %}
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="sidebar-logout">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                    Logout
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'index' %}" class="sidebar-link">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 12L12 3l9 9M5 10v10h5v-6h4v6h5V10"/></svg>
+                Home
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content" id="main-content" role="main">
+
+        <div class="page-header">
+            <div>
+                <h1>Session Schedule</h1>
+                <p>{{ event.title }} &nbsp;·&nbsp; {{ event.start_datetime|date:"j M Y" }}</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <a href="{% url 'tracking' event.id %}" class="btn-ghost">
+                    View Tracking
+                </a>
+                <button class="btn-primary-custom"
+                    aria-expanded="false"
+                    aria-controls="add-session-form"
+                    onclick="
+                        const form = document.getElementById('add-session-form');
+                        const isHidden = form.style.display === 'none' || form.style.display === '';
+                        form.style.display = isHidden ? 'block' : 'none';
+                        this.setAttribute('aria-expanded', isHidden);
+                    ">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    Add Session
+                </button>
+            </div>
+        </div>
+
+        <div class="page-body">
+
+            <!-- ADD SESSION FORM -->
+            <div id="add-session-form"
+                 style="display:none;"
+                 class="form-section mb-4"
+                 role="region"
+                 aria-label="Add new session form">
+
+                <h5>➕ New Session</h5>
+
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Row 1: Track + Speaker -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div>
+                            <label class="form-label" for="track-name">Track Name *</label>
+                            <input type="text" name="track_name" id="track-name"
+                                class="form-input"
+                                placeholder="e.g. Track A"
+                                required aria-required="true">
+                        </div>
+                        <div>
+                            <label class="form-label" for="speaker">Speaker</label>
+                            <input type="text" name="speaker" id="speaker"
+                                class="form-input"
+                                placeholder="e.g. Dr Sarah Chen">
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Start + End Time -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div>
+                            <label class="form-label" for="start-time">Start Time *</label>
+                            <input type="datetime-local" name="start_time" id="start-time"
+                                class="form-input"
+                                required aria-required="true">
+                        </div>
+                        <div>
+                            <label class="form-label" for="end-time">End Time *</label>
+                            <input type="datetime-local" name="end_time" id="end-time"
+                                class="form-input"
+                                required aria-required="true">
+                        </div>
+                    </div>
+
+                    <!-- Session Title + AI (全寬) -->
+                    <div style="margin-bottom:20px;">
+                        <label class="form-label" for="session-title">Session Title *</label>
+                        <input type="text" name="session_title" id="session-title"
+                            class="form-input"
+                            placeholder="e.g. Opening Keynote — or use AI to suggest"
+                            required aria-required="true"
+                            aria-describedby="ai-sessions-help">
+
+                        <div style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+                            <button type="button"
+                                hx-post="{% url 'ai_sessions' %}"
+                                hx-vals='{"event_title": "{{ event.title|escapejs }}"}'
+                                hx-target="#ai-sessions-result"
+                                hx-swap="innerHTML"
+                                hx-indicator="#ai-sessions-loading"
+                                aria-label="Generate AI session title suggestions"
+                                style="background:#f0fdf4; border:1px solid #86efac;
+                                       color:#15803d; padding:6px 12px; border-radius:8px;
+                                       font-size:0.78rem; font-weight:600; cursor:pointer;">
+                                ✨ AI Suggest Titles
+                            </button>
+                            <span id="ai-sessions-loading"
+                                  class="htmx-indicator"
+                                  aria-live="polite"
+                                  style="font-size:0.8rem; color:var(--text-muted);">
+                                Generating...
+                            </span>
+                        </div>
+                        <p id="ai-sessions-help"
+                           style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
+                            Click a suggestion below to fill in the title automatically.
+                        </p>
+                        <div id="ai-sessions-result" aria-live="polite"></div>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:10px;">
+                        <button type="button" class="btn-ghost"
+                            onclick="document.getElementById('add-session-form').style.display='none'">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn-primary-custom">
+                            Save Session
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- SESSION LIST -->
+            {% if tracks %}
+                {% for track in tracks %}
+                <section style="margin-bottom:32px;" aria-labelledby="track-{{ track.id }}-heading">
+
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                        <span style="display:inline-block; width:10px; height:10px;
+                                     border-radius:50%; background:#2563eb;"
+                              aria-hidden="true"></span>
+                        <h2 id="track-{{ track.id }}-heading"
+                            style="font-weight:700; font-size:0.95rem; margin:0;">
+                            {{ track.name }}
+                        </h2>
+                        <span style="font-size:0.78rem; color:var(--text-muted);">
+                            {{ track.session_set.count }} session{{ track.session_set.count|pluralize }}
+                        </span>
+                    </div>
+
+                    {% with track_sessions=track.session_set.all %}
+                    {% if track_sessions %}
+                        {% for session in track_sessions %}
+                        <article class="session-card" aria-label="{{ session.title }}">
+
+                            <div class="session-time" aria-label="Start time">
+                                {{ session.start_time|date:"g:i A" }}
+                                {% if session.end_time %}
+                                <span style="display:block; font-size:0.72rem;">
+                                    – {{ session.end_time|date:"g:i A" }}
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <div style="flex:1;">
+                                <div style="font-weight:600; font-size:0.92rem;">
+                                    {{ session.title }}
+                                </div>
+                                <div style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">
+                                    {% if session.speaker %}
+                                        🎤 {{ session.speaker }}
+                                    {% else %}
+                                        <em>No speaker assigned</em>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <span class="track-pill"
+                                  style="background:#dbeafe; color:#1e40af;"
+                                  aria-label="Track: {{ track.name }}">
+                                {{ track.name }}
+                            </span>
+
+                            <!-- Edit -->
+                            <a href="{% url 'session_edit' event.id session.id %}"
+                               aria-label="Edit session: {{ session.title }}"
+                               style="margin-left:8px; background:var(--primary-light);
+                                      border:1px solid #93c5fd; color:var(--primary);
+                                      padding:5px 12px; border-radius:6px;
+                                      font-size:0.78rem; font-weight:600;
+                                      text-decoration:none; white-space:nowrap;">
+                                Edit
+                            </a>
+
+                            <!-- Delete -->
+                            <form method="POST"
+                                  action="{% url 'session_delete' event.id session.id %}"
+                                  onsubmit="return confirm('Delete session: {{ session.title|escapejs }}?');"
+                                  style="margin-left:6px;">
+                                {% csrf_token %}
+                                <button type="submit"
+                                    aria-label="Delete session: {{ session.title }}"
+                                    style="background:none; border:none; color:#dc2626;
+                                           cursor:pointer; font-size:0.8rem; padding:5px 8px;
+                                           border-radius:6px; transition:background 0.15s;"
+                                    onmouseover="this.style.background='#fef2f2'"
+                                    onmouseout="this.style.background='none'">
+                                    Delete
+                                </button>
+                            </form>
+
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color:var(--text-muted); font-size:0.85rem; padding:12px 0;">
+                            No sessions in this track yet.
+                        </p>
+                    {% endif %}
+                    {% endwith %}
+
+                </section>
+                {% endfor %}
+            {% else %}
+                <div style="text-align:center; padding:48px 32px;
+                            color:var(--text-muted); border:2px dashed var(--border);
+                            border-radius:12px;" role="status" aria-live="polite">
+                    <div style="font-size:2rem; margin-bottom:12px;">🗓️</div>
+                    <div style="font-weight:600; color:var(--text-main); margin-bottom:6px;">
+                        No sessions yet
+                    </div>
+                    <div style="font-size:0.85rem;">
+                        Click "Add Session" above to create your first session.
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- REGISTER PROMPT -->
+            <div style="background:var(--primary-light); border:1px solid #bfdbfe;
+                        border-radius:12px; padding:20px 24px; margin-top:32px;
+                        display:flex; justify-content:space-between; align-items:center;
+                        flex-wrap:wrap; gap:12px;"
+                 role="complementary"
+                 aria-label="Registration call to action">
+                <div>
+                    <div style="font-weight:600; font-size:0.92rem;">
+                        Ready for attendees?
+                    </div>
+                    <div style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">
+                        Share the registration page with your attendees.
+                    </div>
+                </div>
+                <a href="{% url 'register' event.id %}"
+                   class="btn-primary-custom"
+                   aria-label="Open registration page for {{ event.title }}">
+                    Open Registration →
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+</div>
+{% endblock %}

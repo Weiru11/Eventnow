@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Subscriber — EventNow{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <a href="{% url 'index' %}" class="sidebar-brand">Event<span class="dot">Now</span></a>
+        <div class="sidebar-section-label">Admin</div>
+        <a href="{% url 'manage_subscribers' %}" class="sidebar-link active">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Subscribers
+        </a>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-bottom">
+            {% if user.is_authenticated %}
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="sidebar-logout">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                    Logout
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'index' %}" class="sidebar-link">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 12L12 3l9 9M5 10v10h5v-6h4v6h5V10"/></svg>
+                Home
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1>{{ action }} Subscriber</h1>
+                <p>{% if action == 'Edit' %}Update subscriber details.{% else %}Create a new subscriber account.{% endif %}</p>
+            </div>
+            <a href="{% url 'manage_subscribers' %}" class="btn-ghost">← Back</a>
+        </div>
+
+        <div class="page-body">
+            <form method="POST" style="max-width:560px;">
+                {% csrf_token %}
+
+                {% if error %}
+                <div style="background:#fef2f2; border:1px solid #fecaca; color:#dc2626;
+                            border-radius:8px; padding:12px 16px; margin-bottom:20px;
+                            font-size:0.85rem;">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <div class="form-section">
+                    <h5>👤 Account Details</h5>
+
+                    <div style="margin-bottom:16px;">
+                        <label class="form-label">Username *</label>
+                        <input type="text" name="username" class="form-input"
+                            placeholder="Username"
+                            value="{{ form_data.username|default:'' }}" required>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-input"
+                            placeholder="email@example.com"
+                            value="{{ form_data.email|default:'' }}">
+                    </div>
+
+                    <div>
+                        <label class="form-label">
+                            Password {% if action == 'Edit' %}(leave blank to keep current){% else %}*{% endif %}
+                        </label>
+                        <input type="password" name="password" class="form-input"
+                            placeholder="{% if action == 'Edit' %}Leave blank to keep current{% else %}Password{% endif %}"
+                            {% if action != 'Edit' %}required{% endif %}>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h5>💳 Subscription</h5>
+
+                    <div style="margin-bottom:16px;">
+                        <label class="form-label">Plan</label>
+                        <select name="plan" class="form-input">
+                            <option value="free" {% if form_data.plan == 'free' %}selected{% endif %}>Free</option>
+                            <option value="pro" {% if form_data.plan == 'pro' %}selected{% endif %}>Pro</option>
+                            <option value="enterprise" {% if form_data.plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-input">
+                            <option value="active" {% if form_data.status == 'active' or not form_data %}selected{% endif %}>Active</option>
+                            <option value="cancelled" {% if form_data.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="expired" {% if form_data.status == 'expired' %}selected{% endif %}>Expired</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:12px;">
+                    <a href="{% url 'manage_subscribers' %}" class="btn-ghost">Cancel</a>
+                    <button type="submit" class="btn-primary-custom">
+                        {{ action }} Subscriber →
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
