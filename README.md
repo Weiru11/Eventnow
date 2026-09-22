@@ -1,17 +1,38 @@
-# EventNow — INFS3202/7202 Web Project
-
 ## Deployment URL
 https://infs3202-1b6241d1.uqcloud.net/eventnow/
 
-## Admin Login (for marking)
-- URL: https://infs3202-1b6241d1.uqcloud.net/eventnow/admin/
-- Username: s4982056
-- Password: Superuseristrue
+# EventNow
 
-## Test User Login
-- URL: https://infs3202-1b6241d1.uqcloud.net/eventnow/login/
-- Username: Wei-Ju
-- Password: weijutest123
+EventNow is a web-based event management platform built with Django.
+It allows users to create and manage events, organize sessions,
+handle registrations, track attendees, and manage subscribers.
+
+The project also integrates LLM-powered features for assisting
+with event planning and content generation.
+
+## Features
+
+- User authentication and registration
+- Event creation and management
+- Session scheduling
+- Event registration
+- Registration and attendee tracking
+- Subscriber management
+- AI-generated event descriptions
+- AI session title suggestions
+- AI event planning chatbot
+- Django Admin interface
+
+## Local Setup
+
+1. Clone the repository
+2. Create a virtual environment
+3. Install dependencies
+4. Run database migrations
+5. Start the Django development server
+
+
+
 
 ## Page Navigation Guide
 | Feature | URL |
@@ -53,3 +74,11 @@ for the in-app AI features:
 - AI: OpenAI GPT-5.4-mini
 - Dynamic UI: HTMX
 - Deployment: UQCloud (Nginx + Gunicorn)
+
+## Background
+
+This project was originally developed for the INFS3202 Web
+Information Systems course at The University of Queensland and
+deployed on UQCloud.
+
+It has since been configured to run locally using SQLite.
