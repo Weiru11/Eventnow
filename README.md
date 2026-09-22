@@ -51,16 +51,6 @@ with event planning and content generation.
 
 ## AI Usage Statement
 
-I used Claude (Anthropic) to assist with the following:
-
-- Generated the models, views and url routing for the Event, 
-  Session, Registration and Subscription features
-- Generated the HTML templates and CSS design system for all pages
-- Helped debug the CSRF error in the register form
-- Helped debug the 500 error in the subscribers page
-- Gave feedback on the database schema design
-- Generated the HTMX integration code for AI features
-
 I used OpenAI GPT-5.4-mini (via the course-provided API key) 
 for the in-app AI features:
 - AI event description generator (Create Event page)
